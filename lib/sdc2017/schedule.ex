@@ -103,6 +103,55 @@ defmodule SDC2017.Schedule do
                         "Powel                " <>
                         "                     " <>
                         "Overkill:Home Edition"
+  def dayname(6,_), do: "Location: Track 1    " <>
+                        "Fri 12:00 -> 13:00   " <>
+                        "                     " <>
+                        "Lunch!               " <>
+                        "                     " <>
+                        "Not Smashburger      " <>
+                        "#TrevorForget        "
+  def dayname(7,_), do: "Location: Track 1    " <>
+                        "Fri 13:00 -> 14:00   " <>
+                        "                     " <>
+                        "Rich MacVarish       " <>
+                        "Crowdsourced Disaster" <>
+                        "Response: Hurricane  " <>
+                        "Harvey"
+  def dayname(8,_), do: "Location: Track 1    " <>
+                        "Fri 14:00 -> 15:00   " <>
+                        "                     " <>
+                        "James Bower          " <>
+                        "                     " <>
+                        "Pen Testing is Dead: " <>
+                        "Adapt, or Die        "
+  def dayname(9,_), do: "Location: Track 1    " <>
+                        "Fri 15:00 -> 16:00   " <>
+                        "                     " <>
+                        "Brent White          " <>
+                        "                     " <>
+                        "Common Assesment     " <>
+                        "Mistakes to avoid    "
+  def dayname(10,_),do: "Location: Track 1    " <>
+                        "Fri 16:00 -> 17:00   " <>
+                        "Wally Prather        " <>
+                        "Dave Marcus          " <>
+                        "                     " <>
+                        "DNC Leak in hands of " <>
+                        "trained intel profess"
+  def dayname(11,_),do: "Location: Track 1    " <>
+                        "Fri 11:00 -> 12:00   " <>
+                        "                     " <>
+                        "James \"GreyRaven\"    " <>
+                        "Powel                " <>
+                        "                     " <>
+                        "Overkill:Home Edition"
+  def dayname(12,_),do: "Location: Track 1    " <>
+                        "Fri 11:00 -> 12:00   " <>
+                        "                     " <>
+                        "James \"GreyRaven\"    " <>
+                        "Powel                " <>
+                        "                     " <>
+                        "Overkill:Home Edition"
              
 
 end
