@@ -29,7 +29,7 @@ defmodule SDC2017.UDP do
 
   def dispatch(payload, badgeid, {ip, udpp}, state) do
     pid = findpid(badgeid, {ip, udpp})
-    Logger.debug("#{inspect(__MODULE__)}: #{inspect(payload)}")
+#    Logger.debug("#{inspect(__MODULE__)}: #{inspect(payload)}")
     GenServer.cast(pid, {payload, {ip, udpp}})
     newbadgesources = Map.put(state.badgesources, badgeid, {ip, udpp})
     {:noreply, Map.put(state, :badgesources, newbadgesources)}

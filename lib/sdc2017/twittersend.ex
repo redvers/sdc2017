@@ -16,8 +16,12 @@ defmodule SDC2017.TwitterSend do
   end
 
   def handle_call(ii = {:payload, payload}, _, state) do
+    bindata = SDC2017.Tbox.cls
+    |> SDC2017.Tbox.print(%{x: 0, y: 0}, inspect(__MODULE__))
+    |> SDC2017.Tbox.pp
+    |> SDC2017.OLED.render
     Logger.debug("#{inspect(__MODULE__)}: #{inspect(ii)}")
-    {:reply, <<>>, state}
+    {:reply, bindata, state}
   end
 
 end

@@ -10,16 +10,11 @@ defmodule SDC2017.Badge do
     {:ok, :initial, data}
   end
 
-  def handle_event(:cast, {"COLDBOOT", ipport}, state, data) do
-    render_noapp(ipport, state, data)
-  end
+  def handle_event(:cast, {"COLDBOOT", ipport}, state, data), do: render_noapp(ipport, state, data)
+  def handle_event(:cast, {<<"BATT", mV :: bytes-size(4)>>, ipport}, state, data), do: {:next_state, state, data}
+  def handle_event(:cast, {"BD", {ip, uport}}, state, data), do: render_menu(data)
+  def handle_event(:cast, {"BU", {ip, uport}}, state, data), do: switch_app(data)
 
-  def handle_event(:cast, {"BD", {ip, uport}}, state, data = %{id: badgeid, ipport: ipport, option: menuoption}) do
-    render_menu(data)
-  end
-  def handle_event(:cast, {"BU", {ip, uport}}, state, data = %{id: badgeid, ipport: ipport, option: menuoption}) do
-    switch_app(data)
-  end
   def handle_event(:cast, {"DD", ipport}, :menu, data = %{option: menuoption}) do
     newmenu = 
     case (menuoption > 2) do
@@ -40,9 +35,7 @@ defmodule SDC2017.Badge do
     Map.put(data, :option, newmenu)
     |> render_menu
   end
-  def handle_event(:cast, {_, ipport}, :menu, data = %{option: menuoption}) do
-    render_menu(data)
-  end
+  def handle_event(:cast, {_, ipport}, :menu, data), do: render_menu(data)
 
   def handle_event(:cast, {payload, ipport}, state, data = %{id: badgeid}) do
     newpid = 
@@ -95,8 +88,8 @@ defmodule SDC2017.Badge do
     |> SDC2017.Tbox.print(%{x: 0, y: 0}, "     Main Menu    ")
     |> SDC2017.Tbox.print(%{x: 0, y: 2}, "  Test Application")
     |> SDC2017.Tbox.print(%{x: 0, y: 3}, "  Schedule        ")
-    |> SDC2017.Tbox.print(%{x: 0, y: 4}, "  Twitter #SDC7   ")
-    |> SDC2017.Tbox.print(%{x: 0, y: 5}, "  Twitter #infosec")
+    |> SDC2017.Tbox.print(%{x: 0, y: 4}, "  Twitter Feed    ")
+    |> SDC2017.Tbox.print(%{x: 0, y: 5}, "  Compose Tweet   ")
     |> SDC2017.Tbox.print(%{x: 0, y: (menuoption + 2)}, ">")
     |> SDC2017.Tbox.pp
     |> SDC2017.OLED.render
@@ -115,6 +108,10 @@ defmodule SDC2017.Badge do
       [{pid, appmodule}] -> pid
     end
 
-    {:next_state, appmodule, data}
+    bindata = GenServer.call(mypid, {:payload, :refresh})
+    newdata = Map.put(data, :fb, bindata)
+
+    GenServer.cast(SDC2017.UDP, {:display, badgeid, bindata})
+    {:next_state, appmodule, newdata}
   end
 end
