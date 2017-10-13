@@ -11,9 +11,9 @@ defmodule Sdc2017.Application do
     # Define workers and child supervisors to be supervised
     children = [
       # Starts a worker by calling: Sdc2017.Worker.start_link(arg1, arg2, arg3)
-      worker(Sdc2017.UDP, []),
+      worker(SDC2017.UDP, []),
       worker(SDC2017.OLED, [{128,64}]),
-      supervisor(Registry, [:unique, :badgeapps])
+      supervisor(Registry, [:duplicate, :badgeapps])
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html

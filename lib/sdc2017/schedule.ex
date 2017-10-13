@@ -1,5 +1,5 @@
 require Logger
-defmodule SDC2017.Test do
+defmodule SDC2017.Schedule do
   use GenServer
 
   def start_link(badgeid) do

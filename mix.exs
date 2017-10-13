@@ -31,6 +31,7 @@ defmodule Sdc2017.Mixfile do
   defp deps do
     [
       {:erl_img, git: "https://github.com/mochi/erl_img"},
+      {:gen_state_machine, "~> 2.0"},
 #      {:graphmath, "~> 1.0.2"},
 #      {:amnesia, "~> 0.2.4"},
 #      {:syn, "~> 1.5.0"},

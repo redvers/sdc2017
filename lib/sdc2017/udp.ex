@@ -1,44 +1,22 @@
 require Logger
-defmodule Sdc2017.UDP do
+defmodule SDC2017.UDP do
   use GenServer
 
   def start_link do
-    GenServer.start_link(__MODULE__, nil, [name: :badgeUDP])
+    GenServer.start_link(__MODULE__, nil, [name: __MODULE__])
   end
 
   def init(nil) do
     {:ok, port} = :gen_udp.open(2391, [{:active, true}, :binary])
-    {:ok, %{port: port}}
+    {:ok, %{port: port, badgesources: %{}}}
   end
 
-  def handle_info({:udp, _port, ip, udpp, << badgeid::bytes-size(10), "COLDBOOT" >>}, state) do
-    dispatch(:coldboot, badgeid, {ip, udpp}, state)
-    {:noreply, state}
+  def handle_info({:udp, _port, ip, udpp, << badgeid::bytes-size(10), payload :: binary >>}, state) do
+    dispatch(payload, badgeid, {ip, udpp}, state)
   end
 
-  def handle_info({:udp, _port, ip, udpp, << badgeid::bytes-size(10), "U", "D" >>}, state), do: dispatch(:ud, badgeid,  {ip, udpp}, state)
-  def handle_info({:udp, _port, ip, udpp, << badgeid::bytes-size(10), "U", "U" >>}, state), do: dispatch(:uu, badgeid,  {ip, udpp}, state)
-
-  def handle_info({:udp, _port, ip, udpp, << badgeid::bytes-size(10), "D", "D" >>}, state), do: dispatch(:dd, badgeid,  {ip, udpp}, state)
-  def handle_info({:udp, _port, ip, udpp, << badgeid::bytes-size(10), "D", "U" >>}, state), do: dispatch(:du, badgeid,  {ip, udpp}, state)
-
-  def handle_info({:udp, _port, ip, udpp, << badgeid::bytes-size(10), "L", "D" >>}, state), do: dispatch(:ld, badgeid,  {ip, udpp}, state)
-  def handle_info({:udp, _port, ip, udpp, << badgeid::bytes-size(10), "L", "U" >>}, state), do: dispatch(:lu, badgeid,  {ip, udpp}, state)
-
-  def handle_info({:udp, _port, ip, udpp, << badgeid::bytes-size(10), "R", "D" >>}, state), do: dispatch(:rd, badgeid,  {ip, udpp}, state)
-  def handle_info({:udp, _port, ip, udpp, << badgeid::bytes-size(10), "R", "U" >>}, state), do: dispatch(:ru, badgeid,  {ip, udpp}, state)
-
-  def handle_info({:udp, _port, ip, udpp, << badgeid::bytes-size(10), "P", "D" >>}, state), do: dispatch(:pd, badgeid,  {ip, udpp}, state)
-  def handle_info({:udp, _port, ip, udpp, << badgeid::bytes-size(10), "P", "U" >>}, state), do: dispatch(:pu, badgeid,  {ip, udpp}, state)
-
-  def handle_info({:udp, _port, ip, udpp, << badgeid::bytes-size(10), "B", "D" >>}, state), do: dispatch(:bd, badgeid,  {ip, udpp}, state)
-  def handle_info({:udp, _port, ip, udpp, << badgeid::bytes-size(10), "B", "U" >>}, state), do: dispatch(:bu, badgeid,  {ip, udpp}, state)
-
-  def handle_info({:udp, _port, ip, udpp, << badgeid::bytes-size(10), "M", "K", other :: binary>>}, state), do: dispatch({:mk, other}, badgeid,  {ip, udpp}, state)
-
-  def handle_info({:udp, _port, ip, udpp, << badgeid::bytes-size(10), "BATT", other :: binary>>}, state), do: dispatch({:batt, other}, badgeid,  {ip, udpp}, state)
-
-  def handle_cast({:display, x = {ip,uport}, bindata}, state = %{port: port}) do
+  def handle_cast({:display, badgeid, bindata}, state = %{port: port}) do
+    {ip, uport} = Map.get(state.badgesources, badgeid, {{127,0,0,1}, 42})
     :gen_udp.send(port, ip, uport, bindata)
     {:noreply, state}
   end
@@ -49,13 +27,12 @@ defmodule Sdc2017.UDP do
     {:noreply, state}
   end
 
-
-
-
-  def dispatch(direction, badgeid, {ip, udpp}, state) do
+  def dispatch(payload, badgeid, {ip, udpp}, state) do
     pid = findpid(badgeid, {ip, udpp})
-    GenServer.cast(pid, {direction, {ip, udpp}})
-    {:noreply, state}
+    Logger.debug("#{inspect(__MODULE__)}: #{inspect(payload)}")
+    GenServer.cast(pid, {payload, {ip, udpp}})
+    newbadgesources = Map.put(state.badgesources, badgeid, {ip, udpp})
+    {:noreply, Map.put(state, :badgesources, newbadgesources)}
   end
 
   def findpid(badgeid, ipport) do
