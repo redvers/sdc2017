@@ -11,6 +11,7 @@ defmodule SDC2017.Badge do
   end
 
   def handle_event(:cast, {"COLDBOOT", ipport}, state, data), do: render_noapp(ipport, state, data)
+  def handle_event(:cast, {<<"BATT", mV :: bytes-size(4)>>, ipport}, :initial, data), do: render_noapp(ipport, :initial, data)
   def handle_event(:cast, {<<"BATT", mV :: bytes-size(4)>>, ipport}, state, data), do: {:next_state, state, data}
   def handle_event(:cast, {"BD", {ip, uport}}, state, data), do: render_menu(data)
   def handle_event(:cast, {"BU", {ip, uport}}, state, data), do: switch_app(data)
