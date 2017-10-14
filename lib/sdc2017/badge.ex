@@ -16,10 +16,10 @@ defmodule SDC2017.Badge do
   def handle_event(:cast, {"BD", {ip, uport}}, state, data), do: render_menu(data)
   def handle_event(:cast, {"BU", {ip, uport}}, state, data), do: switch_app(data)
 
-  def handle_event(:cast, {:display, bindata}, SDC2017.Twitter, data = %{id: badgeid}) do
+  def handle_event(:cast, {:display, bindata}, state, data = %{id: badgeid}) when is_binary(bindata) do
     GenServer.cast(SDC2017.UDP, {:display, badgeid, bindata})
     newdata = Map.put(data, :fb, bindata)
-    {:next_state, SDC2017.Twitter, newdata}
+    {:next_state, state, newdata}
   end
   def handle_event(:cast, {:display, bindata}, state, data = %{id: badgeid}), do: {:next_state, state, data}
 
