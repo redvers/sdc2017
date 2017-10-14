@@ -21,6 +21,7 @@ defmodule SDC2017.Badge do
     newdata = Map.put(data, :fb, bindata)
     {:next_state, SDC2017.Twitter, newdata}
   end
+  def handle_event(:cast, {:display, bindata}, state, data = %{id: badgeid}), do: {:next_state, state, data}
 
   def handle_event(:cast, {"DD", ipport}, :menu, data = %{option: menuoption}) do
     newmenu = 
@@ -51,6 +52,8 @@ defmodule SDC2017.Badge do
             pid
       [{pid, appmodule}] -> pid
     end
+
+    IO.inspect(payload)
 
     bindata = GenServer.call(newpid, {:payload, payload})
     GenServer.cast(SDC2017.UDP, {:display, badgeid, bindata})
@@ -89,8 +92,10 @@ defmodule SDC2017.Badge do
     |> SDC2017.Tbox.print(%{x: 0, y: 4}, "Connected: evil.red")
     |> SDC2017.Tbox.print(%{x: 0, y: 6}, "Press \"B\" for menu")
     |> SDC2017.Tbox.print(%{x: 0, y: 7}, ddt)
-    |> SDC2017.Tbox.pp
+#    |> SDC2017.Tbox.pp
     |> SDC2017.OLED.render
+
+    Logger.debug("BadgeID: #{badgeid} entered noapp")
 
     GenServer.cast(SDC2017.UDP, {:display, badgeid, bindata})
     newstate = Map.put(data, :fb, bindata)

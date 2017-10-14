@@ -18,6 +18,8 @@ defmodule SDC2017.Test do
   def handle_call(ii = {:payload, payload}, _, state) do
     bindata = SDC2017.Tbox.cls
     |> SDC2017.Tbox.print(%{x: 0, y: 0}, inspect(__MODULE__))
+    |> SDC2017.Tbox.print(%{x: 0, y: 3}, "lastevent")
+    |> SDC2017.Tbox.print(%{x: 0, y: 4}, inspect(payload))
     |> SDC2017.Tbox.pp
     |> SDC2017.OLED.render
     Logger.debug("#{inspect(__MODULE__)}: #{inspect(ii)}")
