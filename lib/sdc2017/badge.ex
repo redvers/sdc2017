@@ -53,8 +53,8 @@ defmodule SDC2017.Badge do
 
   def app(0), do: SDC2017.Test             # Test Application
   def app(1), do: SDC2017.Schedule         # Schedule
-  def app(2), do: SDC2017.Twitter          # Twitter #SDC6
-  def app(3), do: SDC2017.TwitterSend      # Twitter #Infosec
+  def app(2), do: SDC2017.Twitter          # Twitter Feed
+  def app(3), do: SDC2017.TwitterSend      # Compose Tweet
 
   def handle_event(eventtype = :cast, eventcontent, state, data) do
     IO.inspect(eventtype)
