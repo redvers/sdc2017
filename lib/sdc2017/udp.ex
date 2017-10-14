@@ -7,6 +7,7 @@ defmodule SDC2017.UDP do
   end
 
   def init(nil) do
+    Process.flag(:trap_exit, true)
     {:ok, port} = :gen_udp.open(2391, [{:active, true}, :binary])
     {:ok, %{port: port, badgesources: %{}}}
   end
