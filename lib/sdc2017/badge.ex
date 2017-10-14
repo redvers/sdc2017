@@ -77,12 +77,18 @@ defmodule SDC2017.Badge do
   end
 
   def render_noapp(ipport = {{a,b,c,d},port}, state, data = %{id: badgeid}) do
+    dt = DateTime.utc_now
+         |> DateTime.to_string
+
+    ddt = Regex.replace(~r/\..*/, dt, "", [])
+
     bindata = SDC2017.Tbox.cls
     |> SDC2017.Tbox.print(%{x: 0, y: 0}, "ID: #{badgeid}")
     |> SDC2017.Tbox.print(%{x: 0, y: 1}, "IP: #{a}.#{b}.#{c}.#{d}")
     |> SDC2017.Tbox.print(%{x: 0, y: 2}, "PT: #{port}")
     |> SDC2017.Tbox.print(%{x: 0, y: 4}, "Connected: evil.red")
     |> SDC2017.Tbox.print(%{x: 0, y: 6}, "Press \"B\" for menu")
+    |> SDC2017.Tbox.print(%{x: 0, y: 7}, ddt)
     |> SDC2017.Tbox.pp
     |> SDC2017.OLED.render
 
