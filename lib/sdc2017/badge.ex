@@ -15,6 +15,12 @@ defmodule SDC2017.Badge do
   def handle_event(:cast, {"BD", {ip, uport}}, state, data), do: render_menu(data)
   def handle_event(:cast, {"BU", {ip, uport}}, state, data), do: switch_app(data)
 
+  def handle_event(:cast, {:display, bindata}, SDC2017.Twitter, data = %{id: badgeid}) do
+    GenServer.cast(SDC2017.UDP, {:display, badgeid, bindata})
+    newdata = Map.put(data, :fb, bindata)
+    {:next_state, SDC2017.Twitter, newdata}
+  end
+
   def handle_event(:cast, {"DD", ipport}, :menu, data = %{option: menuoption}) do
     newmenu = 
     case (menuoption > 2) do
@@ -107,6 +113,9 @@ defmodule SDC2017.Badge do
             pid
       [{pid, appmodule}] -> pid
     end
+
+    Logger.debug("BadgeID: #{badgeid} switched to #{inspect(appmodule)}")
+
 
     bindata = GenServer.call(mypid, {:payload, :refresh})
     newdata = Map.put(data, :fb, bindata)

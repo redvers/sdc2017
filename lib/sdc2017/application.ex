@@ -13,6 +13,7 @@ defmodule Sdc2017.Application do
       # Starts a worker by calling: Sdc2017.Worker.start_link(arg1, arg2, arg3)
       worker(SDC2017.UDP, []),
       worker(SDC2017.OLED, [{128,64}]),
+      worker(SDC2017.TwitterStream, []),
       supervisor(Registry, [:duplicate, :badgeapps])
     ]
 
