@@ -49,12 +49,11 @@ defmodule SDC2017.Twitter do
     |> SDC2017.Tbox.print(%{x: 0, y: 2}, "@#{sanitize(text)}:")
 
     img = SDC2017.OLED.render(tbox)
-#    |> SDC2017.Tbox.pp
-#    |> SDC2017.OLED.render
 
-    String.to_atom(badgeid)
+    badgepid = String.to_atom(badgeid)
     |> Process.whereis
-    |> GenServer.cast({:display, img})
+
+    GenServer.cast(badgepid, {:display, img})
 
     Map.put(state, :tbox, tbox)
   end
