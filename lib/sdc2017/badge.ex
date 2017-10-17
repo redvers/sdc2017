@@ -7,23 +7,27 @@ defmodule SDC2017.Badge do
   end
 
   def init(data) do
+    Process.flag(:trap_exit, true)
     {:ok, :initial, data}
   end
 
-  def handle_event(:cast, {"COLDBOOT", ipport}, state, data), do: render_noapp(ipport, state, data)
-  def handle_event(:cast, {<<"BATT", mV :: bytes-size(4)>>, ipport}, :initial, data), do: render_noapp(ipport, :initial, data)
-  def handle_event(:cast, {<<"BATT", mV :: bytes-size(4)>>, ipport}, state, data), do: {:next_state, state, data}
-  def handle_event(:cast, {"BD", {ip, uport}}, state, data), do: render_menu(data)
-  def handle_event(:cast, {"BU", {ip, uport}}, state, data), do: switch_app(data)
+  def handle_event(:cast, {"COLDBOOT", ipport}, state, data = %{id: badgeid}) do
+    Logger.debug("#{badgeid} noapp")
+    render_noapp(ipport, state, data)
+  end
+  def handle_event(:cast, {:payload, <<"BATT", _mV :: bytes-size(4)>>, ipport}, :initial, data), do: render_noapp(ipport, :initial, data)
+  def handle_event(:cast, {:payload, <<"BATT", _mV :: bytes-size(4)>>, _ipport}, state, data), do: {:next_state, state, data}
+  def handle_event(:cast, {:payload, "BD", {_ip, _uport}}, _state, data), do: render_menu(data)
+  def handle_event(:cast, {:payload, "BU", {_ip, _uport}}, _state, data), do: switch_app(data)
 
-  def handle_event(:cast, {:display, bindata}, state, data = %{id: badgeid}) when is_binary(bindata) do
+  def handle_event(:cast, {:display, bindata}, SDC2017.Twitter, data = %{id: badgeid}) when is_binary(bindata) do
     GenServer.cast(SDC2017.UDP, {:display, badgeid, bindata})
     newdata = Map.put(data, :fb, bindata)
-    {:next_state, state, newdata}
+    {:next_state, SDC2017.Twitter, newdata}
   end
-  def handle_event(:cast, {:display, bindata}, state, data = %{id: badgeid}), do: {:next_state, state, data}
+  def handle_event(:cast, {:display, _bindata}, state, data), do: {:next_state, state, data}
 
-  def handle_event(:cast, {"DD", ipport}, :menu, data = %{option: menuoption}) do
+  def handle_event(:cast, {:payload, "DD", _ipport}, :menu, data = %{option: menuoption}) do
     newmenu = 
     case (menuoption > 2) do
       true -> 0
@@ -33,7 +37,7 @@ defmodule SDC2017.Badge do
     Map.put(data, :option, newmenu)
     |> render_menu
   end
-  def handle_event(:cast, {"UD", ipport}, :menu, data = %{option: menuoption}) do
+  def handle_event(:cast, {:payload, "UD", _ipport}, :menu, data = %{option: menuoption}) do
     newmenu = 
     case (menuoption < 1) do
       true -> 3
@@ -43,14 +47,14 @@ defmodule SDC2017.Badge do
     Map.put(data, :option, newmenu)
     |> render_menu
   end
-  def handle_event(:cast, {_, ipport}, :menu, data), do: render_menu(data)
+  def handle_event(:cast, {:payload, _, _ipport}, :menu, data), do: render_menu(data)
 
-  def handle_event(:cast, {payload, ipport}, state, data = %{id: badgeid}) do
+  def handle_event(:cast, {:payload, payload, _ipport}, state, data = %{id: badgeid}) do
     newpid = 
     case Registry.match(:badgeapps, badgeid, state) do
       [] -> {:ok, pid} = apply(state, :start_link, [badgeid])
             pid
-      [{pid, appmodule}] -> pid
+      [{pid, _appmodule}] -> pid
     end
 
     IO.inspect(payload)
@@ -61,11 +65,6 @@ defmodule SDC2017.Badge do
     {:next_state, state, newstate}
   end
 
-  def app(0), do: SDC2017.Test             # Test Application
-  def app(1), do: SDC2017.Schedule         # Schedule
-  def app(2), do: SDC2017.Twitter          # Twitter Feed
-  def app(3), do: SDC2017.TwitterSend      # Compose Tweet
-
   def handle_event(eventtype = :cast, eventcontent, state, data) do
     IO.inspect(eventtype)
     IO.inspect(eventcontent)
@@ -75,11 +74,17 @@ defmodule SDC2017.Badge do
     {:next_state, state, data}
   end
   
-  def handle_event(eventtype = {:call, from}, eventcontent, state, data) do
+  def handle_event({:call, from}, _eventcontent, state, data) do
     {:next_state, state, data, [{:reply, from, <<>>}]}
   end
 
-  def render_noapp(ipport = {{a,b,c,d},port}, state, data = %{id: badgeid}) do
+  def app(0), do: SDC2017.Test             # Test Application
+  def app(1), do: SDC2017.Schedule         # Schedule
+  def app(2), do: SDC2017.Twitter          # Twitter Feed
+  def app(3), do: SDC2017.TwitterSend      # Compose Tweet
+
+
+  def render_noapp({{a,b,c,d},port}, _state, data = %{id: badgeid}) do
     dt = DateTime.utc_now
          |> DateTime.to_string
 
@@ -95,13 +100,11 @@ defmodule SDC2017.Badge do
 #    |> SDC2017.Tbox.pp
     |> SDC2017.OLED.render
 
-    Logger.debug("BadgeID: #{badgeid} entered noapp")
-
     GenServer.cast(SDC2017.UDP, {:display, badgeid, bindata})
     newstate = Map.put(data, :fb, bindata)
     {:next_state, :initial, newstate}
   end
-  def render_menu(data = %{id: badgeid, ipport: ipport, option: menuoption}) do
+  def render_menu(data = %{id: badgeid, option: menuoption}) do
     bindata = SDC2017.Tbox.cls
     |> SDC2017.Tbox.print(%{x: 0, y: 0}, "     Main Menu    ")
     |> SDC2017.Tbox.print(%{x: 0, y: 2}, "  Test Application")
@@ -123,10 +126,10 @@ defmodule SDC2017.Badge do
     case Registry.match(:badgeapps, badgeid, appmodule) do
       [] -> {:ok, pid} = apply(appmodule, :start_link, [badgeid])
             pid
-      [{pid, appmodule}] -> pid
+      [{pid, _appmodule}] -> pid
     end
 
-    Logger.debug("BadgeID: #{badgeid} switched to #{inspect(appmodule)}")
+    Logger.debug("#{inspect(self())} BadgeID: #{badgeid} switched to #{inspect(appmodule)}")
 
 
     bindata = GenServer.call(mypid, {:payload, :refresh})
