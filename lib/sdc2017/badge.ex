@@ -11,7 +11,7 @@ defmodule SDC2017.Badge do
     {:ok, :initial, data}
   end
 
-  def handle_event(:cast, {"COLDBOOT", ipport}, state, data = %{id: badgeid}) do
+  def handle_event(:cast, {:payload, "COLDBOOT", ipport}, state, data = %{id: badgeid}) do
     Logger.debug("#{badgeid} noapp")
     render_noapp(ipport, state, data)
   end
@@ -49,6 +49,7 @@ defmodule SDC2017.Badge do
   end
   def handle_event(:cast, {:payload, _, _ipport}, :menu, data), do: render_menu(data)
 
+  def handle_event(:cast, {:payload, payload, ipport}, :initial, data), do: render_noapp(ipport, :initial, data)
   def handle_event(:cast, {:payload, payload, _ipport}, state, data = %{id: badgeid}) do
     newpid = 
     case Registry.match(:badgeapps, badgeid, state) do
