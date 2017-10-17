@@ -33,6 +33,7 @@ defmodule SDC2017.OLED do
     imagedata = :egd.render(egd, :raw_bitmap)
     |> tuple28bits
     |> Enum.map(&(Bitwise.bxor(255, &1)))
+    |> :binary.list_to_bin
 
     :egd.destroy(egd)
 
