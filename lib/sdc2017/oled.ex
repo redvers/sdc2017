@@ -19,6 +19,7 @@ defmodule SDC2017.OLED do
     imagelines = model.textdata
     |> String.to_char_list
     |> Enum.chunk(model.size.x, model.size.x, '                     ')
+#    |> IO.inspect
 
     egd = :egd.create(128,64)
     :egd.text(egd, {0,-4}, fontname, Enum.at(imagelines, 0), :egd.color(:black))

@@ -58,7 +58,7 @@ defmodule SDC2017.Badge do
       [{pid, _appmodule}] -> pid
     end
 
-    IO.inspect(payload)
+#    IO.inspect(payload)
 
     bindata = GenServer.call(newpid, {:payload, payload})
     GenServer.cast(SDC2017.UDP, {:display, badgeid, bindata})
@@ -79,10 +79,10 @@ defmodule SDC2017.Badge do
     {:next_state, state, data, [{:reply, from, <<>>}]}
   end
 
-  def app(0), do: SDC2017.Test             # Test Application
+  def app(0), do: SDC2017.Twitter             # Test Application
   def app(1), do: SDC2017.Schedule         # Schedule
   def app(2), do: SDC2017.Twitter          # Twitter Feed
-  def app(3), do: SDC2017.TwitterSend      # Compose Tweet
+  def app(3), do: SDC2017.Twitter      # Compose Tweet
 
 
   def render_noapp({{a,b,c,d},port}, _state, data = %{id: badgeid}) do
@@ -108,10 +108,10 @@ defmodule SDC2017.Badge do
   def render_menu(data = %{id: badgeid, option: menuoption}) do
     bindata = SDC2017.Tbox.cls
     |> SDC2017.Tbox.print(%{x: 0, y: 0}, "     Main Menu    ")
-    |> SDC2017.Tbox.print(%{x: 0, y: 2}, "  Test Application")
+    |> SDC2017.Tbox.print(%{x: 0, y: 2}, "  Twitter Feed    ")
     |> SDC2017.Tbox.print(%{x: 0, y: 3}, "  Schedule        ")
-    |> SDC2017.Tbox.print(%{x: 0, y: 4}, "  Twitter Feed    ")
-    |> SDC2017.Tbox.print(%{x: 0, y: 5}, "  Compose Tweet   ")
+    |> SDC2017.Tbox.print(%{x: 0, y: 4}, "  MOAR Twitter    ")
+    |> SDC2017.Tbox.print(%{x: 0, y: 5}, "  EVEN MOAR Tweets")
     |> SDC2017.Tbox.print(%{x: 0, y: (menuoption + 2)}, ">")
     |> SDC2017.Tbox.pp
     |> SDC2017.OLED.render

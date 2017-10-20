@@ -38,7 +38,13 @@ defmodule SDC2017.Twitter do
   end
 
   def handle_cast({:tweet, %{user: %{screen_name: user}, text: text}}, state) do
-    newstate = render_model(user, text, state)
+    newstate =
+    case {sanitize(user), sanitize(text)} do
+      {"", _} -> state
+      {_, ""} -> state
+      {u, t}   -> render_model(u, t, state)
+    end
+
     {:noreply, newstate}
   end
 
@@ -62,7 +68,7 @@ defmodule SDC2017.Twitter do
 #    IO.puts(text)
     newtext =
     case :unicode.characters_to_binary(String.to_char_list(text), :latin1) do
-      {:error, text, _} -> text
+      wtf = {:error, text, _} -> "" 
       text -> text
     end
 
